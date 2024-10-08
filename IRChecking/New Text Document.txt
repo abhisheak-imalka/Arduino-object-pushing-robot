@@ -1,0 +1,67 @@
+// Motor control pins
+const int LeftMotorForward = 7;
+const int LeftMotorBackward = 6;
+const int RightMotorForward = 5;
+const int RightMotorBackward = 4;
+
+// TCRT5000 sensor pin
+const int sensorPin = 2;
+
+boolean goesForward = false;
+
+void setup() {
+  // Initialize serial communication
+  Serial.begin(9600);
+  
+  // Set sensor pin as input
+  pinMode(sensorPin, INPUT);
+
+  // Set motor pins as outputs
+  pinMode(LeftMotorForward, OUTPUT);
+  pinMode(LeftMotorBackward, OUTPUT);
+  pinMode(RightMotorForward, OUTPUT);
+  pinMode(RightMotorBackward, OUTPUT);
+
+  // Initially move forward
+  moveForward();
+}
+
+void loop() {
+  // Read the sensor value
+  int sensorValue = digitalRead(sensorPin);
+
+  if (sensorValue == HIGH) {
+    Serial.println("Black color detected, stopping the car");
+    moveStop(); // Stop the car when black color is detected
+  } else {
+    Serial.println("No black color, moving forward");
+    moveForward(); // Move forward otherwise
+  }
+
+  delay(100); // Small delay for stability
+}
+
+// Functions to control the motor car
+void moveForward() {
+  if (!goesForward) {
+    goesForward = true;
+
+    digitalWrite(LeftMotorForward, HIGH);
+    digitalWrite(RightMotorForward, HIGH);
+    digitalWrite(LeftMotorBackward, LOW);
+    digitalWrite(RightMotorBackward, LOW);
+
+    Serial.println("Moving forward");
+  }
+}
+
+void moveStop() {
+  goesForward = false;
+
+  digitalWrite(LeftMotorForward, LOW);
+  digitalWrite(RightMotorForward, LOW);
+  digitalWrite(LeftMotorBackward, LOW);
+  digitalWrite(RightMotorBackward, LOW);
+
+  Serial.println("Car stopped");
+}
