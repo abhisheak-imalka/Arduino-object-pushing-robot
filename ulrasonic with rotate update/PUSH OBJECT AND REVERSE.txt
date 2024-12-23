@@ -1,0 +1,114 @@
+#include <Ultrasonic.h>
+
+// Define pins for ultrasonic sensor
+const int trigPin = 10;
+const int echoPin = 11;
+Ultrasonic ultrasonic(trigPin, echoPin);
+
+// Motor pins
+const int motorLeftPWMPin = 8;    // Left motor PWM pin
+const int motorRightPWMPin = 9;   // Right motor PWM pin
+const int motorLeftForwardPin = 7; // Left motor forward direction pin
+const int motorLeftBackwardPin = 6; // Left motor backward direction pin
+const int motorRightForwardPin = 5; // Right motor forward direction pin
+const int motorRightBackwardPin = 4; // Right motor backward direction pin
+
+// IR sensor pins
+const int IR1_Pin = 2;  // Left IR sensor
+const int IR2_Pin = 3;  // Right IR sensor
+
+void setup() {
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+  pinMode(motorLeftPWMPin, OUTPUT);
+  pinMode(motorRightPWMPin, OUTPUT);
+  pinMode(motorLeftForwardPin, OUTPUT);
+  pinMode(motorLeftBackwardPin, OUTPUT);
+  pinMode(motorRightForwardPin, OUTPUT);
+  pinMode(motorRightBackwardPin, OUTPUT);
+
+  pinMode(IR1_Pin, INPUT);
+  pinMode(IR2_Pin, INPUT);
+
+  Serial.begin(9600); // Initialize serial communication for debugging
+}
+
+void loop() {
+  long duration, distance;
+
+  // Send a pulse to trigger the ultrasonic sensor
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  // Read the echo time
+  duration = pulseIn(echoPin, HIGH);
+
+  // Calculate the distance
+  distance = (duration / 2) / 29.1;
+
+  // Debugging output
+  Serial.print("Distance: ");
+  Serial.println(distance);
+
+  // Check IR sensors
+  bool blackLineDetected = (digitalRead(IR1_Pin) == HIGH || digitalRead(IR2_Pin) == HIGH);
+
+  if (blackLineDetected) {
+    stopCar();        // Stop the car
+    reverseCar();     // Reverse for a short distance
+  } else if (distance <= 35) {
+    pushObject();     // Push the object if detected within 35 cm
+  } else {
+    rotateLeft();     // Rotate left if no object or black line detected
+  }
+
+  delay(100);
+}
+
+void rotateLeft() {
+  analogWrite(motorLeftPWMPin, 128); // Set PWM speed (0-255)
+  analogWrite(motorRightPWMPin, 128); // Set PWM speed (0-255)
+
+  digitalWrite(motorLeftForwardPin, LOW);
+  digitalWrite(motorLeftBackwardPin, HIGH);
+  digitalWrite(motorRightForwardPin, HIGH);
+  digitalWrite(motorRightBackwardPin, LOW);
+}
+
+void pushObject() {
+  analogWrite(motorLeftPWMPin, 200); // Set PWM speed for pushing (0-255)
+  analogWrite(motorRightPWMPin, 200); // Set PWM speed for pushing (0-255)
+
+  digitalWrite(motorLeftForwardPin, HIGH);
+  digitalWrite(motorLeftBackwardPin, LOW);
+  digitalWrite(motorRightForwardPin, HIGH);
+  digitalWrite(motorRightBackwardPin, LOW);
+}
+
+void stopCar() {
+  analogWrite(motorLeftPWMPin, 0);  // Stop left motor
+  analogWrite(motorRightPWMPin, 0); // Stop right motor
+
+  digitalWrite(motorLeftForwardPin, LOW);
+  digitalWrite(motorLeftBackwardPin, LOW);
+  digitalWrite(motorRightForwardPin, LOW);
+  digitalWrite(motorRightBackwardPin, LOW);
+}
+
+void reverseCar() {
+  analogWrite(motorLeftPWMPin, 128); // Set PWM speed for reversing (0-255)
+  analogWrite(motorRightPWMPin, 128); // Set PWM speed for reversing (0-255)
+
+  digitalWrite(motorLeftForwardPin, LOW);
+  digitalWrite(motorLeftBackwardPin, HIGH);
+  digitalWrite(motorRightForwardPin, LOW);
+  digitalWrite(motorRightBackwardPin, HIGH);
+
+  delay(500);  // Reverse for 500 milliseconds (reduced distance)
+
+  stopCar();  // Stop after reversing
+}

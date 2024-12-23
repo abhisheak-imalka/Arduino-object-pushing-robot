@@ -1,0 +1,76 @@
+#include <Ultrasonic.h>
+
+// Define pins for ultrasonic sensor
+const int trigPin = 10;
+const int echoPin = 11;
+Ultrasonic ultrasonic(trigPin, echoPin);
+
+// Motor pins
+const int motorLeftPWMPin = 8;    // Left motor PWM pin
+const int motorRightPWMPin = 9;   // Right motor PWM pin
+const int motorLeftForwardPin = 7; // Left motor forward direction pin
+const int motorLeftBackwardPin = 6; // Left motor backward direction pin
+const int motorRightForwardPin = 5; // Right motor forward direction pin
+const int motorRightBackwardPin = 4; // Right motor backward direction pin
+
+void setup() {
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+  pinMode(motorLeftPWMPin, OUTPUT);
+  pinMode(motorRightPWMPin, OUTPUT);
+  pinMode(motorLeftForwardPin, OUTPUT);
+  pinMode(motorLeftBackwardPin, OUTPUT);
+  pinMode(motorRightForwardPin, OUTPUT);
+  pinMode(motorRightBackwardPin, OUTPUT);
+
+  Serial.begin(9600); // Initialize serial communication for debugging
+}
+
+void loop() {
+  long duration, distance;
+  
+  // Send a pulse to trigger the ultrasonic sensor
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  
+  // Read the echo time
+  duration = pulseIn(echoPin, HIGH);
+  
+  // Calculate the distance
+  distance = (duration / 2) / 29.1;
+  
+  // Debugging output
+  Serial.print("Distance: ");
+  Serial.println(distance);
+  
+  if (distance > 35) { // Rotate left slowly if no object is detected within 20 cm
+    rotateLeft();
+  } else { // Move forward if an object is detected within 20 cm
+    moveForward();
+  }
+  delay(100);
+}
+
+void rotateLeft() {
+  analogWrite(motorLeftPWMPin, 128); // Set PWM speed (0-255)
+  analogWrite(motorRightPWMPin,128); // Set PWM speed (0-255)
+  
+  digitalWrite(motorLeftForwardPin, LOW);
+  digitalWrite(motorLeftBackwardPin, HIGH);
+  digitalWrite(motorRightForwardPin, HIGH);
+  digitalWrite(motorRightBackwardPin, LOW);
+}
+
+void moveForward() {
+  analogWrite(motorLeftPWMPin, 128); // Set PWM speed (0-255)
+  analogWrite(motorRightPWMPin, 128); // Set PWM speed (0-255)
+
+  digitalWrite(motorLeftForwardPin, HIGH);
+  digitalWrite(motorLeftBackwardPin, LOW);
+  digitalWrite(motorRightForwardPin, HIGH);
+  digitalWrite(motorRightBackwardPin, LOW);
+}
